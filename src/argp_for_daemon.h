@@ -7,13 +7,22 @@
 #include <stdbool.h>
 
 static struct argp_option options[] = {
-    {"becomeDaemon", 'D', NULL, 0, 
-    "Become daemon program" },
+  {"host",   'h', "HOST", 0,
+   "Host" },
+
+  {"port",    'p', "PORT", 0,
+   "Port" },
+
+  {"becomeDaemon", 'D', NULL, 0, 
+   "Become daemon program" },
+
   { 0 }
 };
 
 struct Arguments
 {
+  char host[40];
+  int port;
   bool becomeDaemon;
 };
 
