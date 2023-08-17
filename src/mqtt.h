@@ -6,6 +6,7 @@
 
 #include "argp_for_daemon.h"
 
+void on_connect_callback(struct mosquitto *mosq, void *userdata, int result);
 int moquitto_init(int keepalive);
 
 #endif

@@ -24,6 +24,12 @@ static struct argp_option options[] = {
 
   {"cafile", 'a', "CAFILE", 0, 
    "Path to cafile file" },
+  
+  {"username", 'u', "USERNAME", 0, 
+   "username" },
+
+  {"password", 'P', "PASSWORD", 0, 
+   "password" },
 
   { 0 }
 };
@@ -36,6 +42,8 @@ struct Arguments
   char keyPath[126];
   char certPath[126];
   char cafilePath[126];
+  char username[50];
+  char password[50];
 };
 
 error_t parse_opt(int key, char *arg, struct argp_state *state);

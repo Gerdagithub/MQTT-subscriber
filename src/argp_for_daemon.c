@@ -32,11 +32,21 @@ error_t parse_opt(int key, char *arg, struct argp_state *state)
       strncpy(arguments->keyPath, arg, sizeof(arguments->keyPath));
       break;
 
+    case 'u':
+      strncpy(arguments->username, arg, sizeof(arguments->username));
+      break;
+
+    case 'P':
+      strncpy(arguments->password, arg, sizeof(arguments->password));
+      break;
+
     case ARGP_KEY_END:
       if (!strcmp(arguments->host, "") ||
       !(strcmp(arguments->cafilePath, "") && strcmp(arguments->certPath, "") && strcmp(arguments->keyPath, "")) &&
-      (strcmp(arguments->cafilePath, "") || strcmp(arguments->certPath, "") || strcmp(arguments->keyPath, "")))
-        argp_state_help(state, stdout, ARGP_HELP_STD_HELP);      
+      (strcmp(arguments->cafilePath, "") || strcmp(arguments->certPath, "") || strcmp(arguments->keyPath, "")) ||
+      !(strcmp(arguments->username, "") && strcmp(arguments->password, "")) && 
+      (strcmp(arguments->username, "") || strcmp(arguments->password, "")))
+        argp_state_help(state, stdout, ARGP_HELP_STD_HELP);
       break;
         
     default:

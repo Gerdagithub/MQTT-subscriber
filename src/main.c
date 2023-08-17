@@ -9,6 +9,8 @@
 
 extern struct Arguments argpArguments; 
 extern struct mosquitto *mosq;
+extern bool connectedToTheBroker;
+extern int retMqtt;
 
 int main(int argc, char **argv)
 {
@@ -41,13 +43,14 @@ int main(int argc, char **argv)
         goto cleanUp;
 
     ret = mosquitto_loop_forever(mosq, -1, 1);
-    if (ret)
-        syslog(LOG_USER | LOG_ERR, "mosquitto_loop_forever failed: %s", mosquitto_strerror(ret));
-    
+    if (ret || retMqtt)
+        syslog(LOG_USER | LOG_ERR, "mosquitto_loop_forever failed: %s", mosquitto_strerror(ret? ret : retMqtt));
 
 cleanUp:
     if (mosq){
-        mosquitto_disconnect(mosq);
+        if (connectedToTheBroker)
+            mosquitto_disconnect(mosq);
+        
         mosquitto_destroy(mosq);
     }
     mosquitto_lib_cleanup();
@@ -57,4 +60,3 @@ cleanUp:
 
     return ret;
 }
-///////
