@@ -8,7 +8,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/mqtt-subscriber
-	DEPENDS:=+libTuya +libubus +libubox +libblobmsg-json +libusb-1.0 +libtlt_uci +libmosquitto
+	DEPENDS:=+libmosquitto +libuci
 	SECTION:=utils
 	CATEGORY:=Utilities
 	TITLE:=MQTT subscriber

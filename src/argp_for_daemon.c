@@ -1,5 +1,7 @@
 #include "argp_for_daemon.h"
 
+struct Arguments argpArguments; 
+
 error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
   struct Arguments *arguments = state->input;
@@ -7,7 +9,7 @@ error_t parse_opt(int key, char *arg, struct argp_state *state)
   switch (key)
   { 
     case 'h':
-      strncpy(arguments->host, arg, strlen(arg) + 1); 
+      strncpy(arguments->host, arg, sizeof(arguments->host)); 
       break;
         
     case 'p':
@@ -16,10 +18,25 @@ error_t parse_opt(int key, char *arg, struct argp_state *state)
 
     case 'D':
       arguments->becomeDaemon = true;
+      break;
+
+    case 'a':
+      strncpy(arguments->cafilePath, arg, sizeof(arguments->cafilePath));
+      break;
+
+    case 'c':
+      strncpy(arguments->certPath, arg, sizeof(arguments->certPath));
+      break;
+    
+    case 'k':
+      strncpy(arguments->keyPath, arg, sizeof(arguments->keyPath));
+      break;
 
     case ARGP_KEY_END:
-      if (!arguments->host || !arguments->port)
-        argp_usage (state);
+      if (!strcmp(arguments->host, "") ||
+      !(strcmp(arguments->cafilePath, "") && strcmp(arguments->certPath, "") && strcmp(arguments->keyPath, "")) &&
+      (strcmp(arguments->cafilePath, "") || strcmp(arguments->certPath, "") || strcmp(arguments->keyPath, "")))
+        argp_state_help(state, stdout, ARGP_HELP_STD_HELP);      
       break;
         
     default:
