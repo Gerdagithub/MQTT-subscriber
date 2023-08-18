@@ -6,15 +6,21 @@
 #include "argp_for_daemon.h"
 #include "mqtt.h"
 #include "additional.h"
+#include "uci_mqtt.h"
+#include "sqlite_mqtt.h"
 
 extern struct Arguments argpArguments; 
 extern struct mosquitto *mosq;
+extern sqlite3 *db;
 extern bool connectedToTheBroker;
 extern int retMqtt;
 
 int main(int argc, char **argv)
 {
+    Topic *topics;
     int keepalive = 60, ret = 0;
+    int amountOfTopics = 0;
+    bool dbOpened = false;
    
     argpArguments.becomeDaemon = false;
 
@@ -38,7 +44,18 @@ int main(int argc, char **argv)
         goto cleanUp;
     }
 
-    ret = moquitto_init(keepalive);
+    ret = mosquitto_init(keepalive);
+    if (ret)
+        goto cleanUp;
+
+    topics = (Topic *)malloc(sizeof(Topic) * MAX_TOPICS);
+    ret = load_topics_events(topics, &amountOfTopics);
+    if (ret)
+        goto cleanUp;
+
+    subscribe_to_topics(topics, amountOfTopics);
+
+    ret = database_init(&dbOpened);
     if (ret)
         goto cleanUp;
 
@@ -47,12 +64,16 @@ int main(int argc, char **argv)
         syslog(LOG_USER | LOG_ERR, "mosquitto_loop_forever failed: %s", mosquitto_strerror(ret? ret : retMqtt));
 
 cleanUp:
-    if (mosq){
-        if (connectedToTheBroker)
-            mosquitto_disconnect(mosq);
-        
+    free(topics);
+    if (dbOpened)
+        sqlite3_close(db);
+
+    if (mosq && connectedToTheBroker)
+        mosquitto_disconnect(mosq); 
+
+    if (mosq)
         mosquitto_destroy(mosq);
-    }
+
     mosquitto_lib_cleanup();
 
     syslog(LOG_USER | LOG_INFO, "MQTT subscriber ended");
