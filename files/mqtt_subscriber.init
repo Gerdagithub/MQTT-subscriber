@@ -21,7 +21,7 @@ start_service() {
     config_get password mqtt_subscriber_sct 'password' '-'
 
     procd_open_instance
-    procd_set_param command /usr/bin/mqtt_subscriber -h "$host" -p $port -a "$cafile_path" -c "$cert_path" -k "$key_path" -u "$username" -P "$password"
+    procd_set_param command /usr/bin/mqtt_subscriber -h "$host" -p $port -a "$cafile_path" -c "$cert_path" -k "$key_path" -u "$username" -P "$password" -u "$username" -P "$password" -h "$host" -p $port -a "$cafile_path" -c "$cert_path" -k "$key_path"
     procd_set_param pidfile /var/run/mqtt_subscriber.pid
     procd_set_param file /etc/config/mqtt_subscriber
     procd_close_instance

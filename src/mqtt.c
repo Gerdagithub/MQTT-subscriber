@@ -2,8 +2,9 @@
 
 struct mosquitto *mosq = NULL;
 bool connectedToTheBroker = false;
-extern struct Arguments argpArguments; 
 int retMqtt = 0;
+
+extern struct Arguments argpArguments; 
 
 void on_connect_callback(struct mosquitto *mosq, void *userdata, int result) 
 {
@@ -13,7 +14,7 @@ void on_connect_callback(struct mosquitto *mosq, void *userdata, int result)
     }
 }
 
-int moquitto_init(int keepalive)
+int mosquitto_init(int keepalive)
 {
     int ret = 0;
 
@@ -48,13 +49,35 @@ int moquitto_init(int keepalive)
         }
     }
 
-     mosquitto_connect_callback_set(mosq, on_connect_callback);
+    mosquitto_connect_callback_set(mosq, on_connect_callback);
     
     ret = mosquitto_connect(mosq, argpArguments.host, argpArguments.port, keepalive);
     if (ret != MOSQ_ERR_SUCCESS) {
         syslog(LOG_USER | LOG_ERR, "mosquitto_connect failed: %s", mosquitto_strerror(ret));
+        return ret;
     }
     else connectedToTheBroker = true;
 
+    mosquitto_message_callback_set(mosq, message_callback);
+
     return ret;
+}
+
+void subscribe_to_topics(Topic *topics, int amountOfTopics)
+{
+    for (int i = 0; i < amountOfTopics; i++){
+        if (mosquitto_subscribe(mosq, NULL, topics[i].topicName, topics[i].qos) != MOSQ_ERR_SUCCESS) {
+            syslog(LOG_USER | LOG_ERR, "Unable to subscribe to topic");
+        }
+    }
+}
+
+void message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
+{
+    if(!is_json(message->payload))
+        return;
+
+    int ret = insert_topic_to_database(message->topic, message->payload);
+    if (ret)
+        syslog(LOG_USER | LOG_ERR, "Topic data was not inserted to DB");
 }
