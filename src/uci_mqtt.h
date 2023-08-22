@@ -7,9 +7,11 @@
 
 #include "mqtt.h"
 
-int uci_init(struct uci_context **ctx, struct uci_package **pkg, bool *uciCtxCreated, bool *uciIsLoaded);
+int uci_init(struct uci_context **ctx, struct uci_package **pkg, bool *uciIsLoaded);
 int load_topics_events(Topic *topics, int *amountOfTopics);
 void get_topics(struct uci_context *ctx, struct uci_package *pkg, Topic *topics, int *amountOfTopics);
+void get_events(struct uci_context *ctx, struct uci_package *pkg);
 void process_topic_info_from_uci(struct uci_section *section, Topic *topics, int *amountOfTopics);
+void process_event_info_from_uci(struct uci_section *section);
 
 #endif

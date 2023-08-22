@@ -7,7 +7,7 @@ error_t parse_opt(int key, char *arg, struct argp_state *state)
   struct Arguments *arguments = state->input;
 
   switch (key)
-  {  
+  {
     case 'h':
       strncpy(arguments->host, arg, sizeof(arguments->host)); 
       break;

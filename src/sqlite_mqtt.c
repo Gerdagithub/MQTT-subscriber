@@ -19,7 +19,7 @@ int open_database(char db_filename[126])
 {
     int rc = sqlite3_open(db_filename, &db);
     if (rc != SQLITE_OK) {
-        syslog(LOG_USER | LOG_ERR, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        syslog(LOG_USER | LOG_ERR, "Cannot open database: %s", sqlite3_errmsg(db));
         return 1;
     }
     return 0;
@@ -28,8 +28,6 @@ int open_database(char db_filename[126])
 int create_tables()
 {
     int ret = 0;
-
-    sqlite3_exec(db, "DROP TABLE IF EXISTS topics;", 0, 0, 0);
 
     ret = sqlite3_exec(db, 
         "CREATE TABLE IF NOT EXISTS topics ("
@@ -50,10 +48,13 @@ int create_tables()
 int insert_topic_to_database(char topicName[256], char data[256])
 {
     char command[256];
+    char *time = current_time();
 
     sprintf(command,
     "INSERT INTO topics (topic, data, datetime) VALUES "
-    "('%s', '%s', '%s');", topicName, data, current_time());
+    "('%s', '%s', '%s');", topicName, data, time);
+
+    free(time);
 
     return sqlite3_exec(db, command, 0, 0, 0);
 }
