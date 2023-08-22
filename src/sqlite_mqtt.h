@@ -10,7 +10,7 @@
 
 int database_init(bool *dbOpened);
 int open_database(char db_filename[126]);
-int create_db();
+int create_tables();
 int insert_topic_to_database(char topicName[256], char data[256]);
 
 #endif

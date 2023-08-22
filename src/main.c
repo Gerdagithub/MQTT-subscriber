@@ -64,17 +64,11 @@ int main(int argc, char **argv)
         syslog(LOG_USER | LOG_ERR, "mosquitto_loop_forever failed: %s", mosquitto_strerror(ret? ret : retMqtt));
 
 cleanUp:
-    free(topics);
     if (dbOpened)
-        sqlite3_close(db);
+        sqlite3_close(db); 
 
-    if (mosq && connectedToTheBroker)
-        mosquitto_disconnect(mosq); 
-
-    if (mosq)
-        mosquitto_destroy(mosq);
-
-    mosquitto_lib_cleanup();
+    mosquitto_deinit(topics, amountOfTopics);
+    free(topics);
 
     syslog(LOG_USER | LOG_INFO, "MQTT subscriber ended");
     closelog();

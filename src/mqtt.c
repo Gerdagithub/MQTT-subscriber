@@ -1,5 +1,7 @@
 #include "mqtt.h"
 
+Event events[MAX_EVENTS];
+int amountOfEvents = 0;
 struct mosquitto *mosq = NULL;
 bool connectedToTheBroker = false;
 int retMqtt = 0;
@@ -17,7 +19,6 @@ void on_connect_callback(struct mosquitto *mosq, void *userdata, int result)
 int mosquitto_init(int keepalive)
 {
     int ret = 0;
-
     mosquitto_lib_init();
 
     mosq = mosquitto_new(NULL, true, NULL);
@@ -65,19 +66,60 @@ int mosquitto_init(int keepalive)
 
 void subscribe_to_topics(Topic *topics, int amountOfTopics)
 {
+    int ret = 0;
+
     for (int i = 0; i < amountOfTopics; i++){
-        if (mosquitto_subscribe(mosq, NULL, topics[i].topicName, topics[i].qos) != MOSQ_ERR_SUCCESS) {
-            syslog(LOG_USER | LOG_ERR, "Unable to subscribe to topic");
+        ret = mosquitto_subscribe(mosq, NULL, topics[i].topicName, topics[i].qos);
+        if (ret != MOSQ_ERR_SUCCESS) {
+            syslog(LOG_USER | LOG_ERR, "Unable to subscribe to topic: %s", mosquitto_strerror(ret));
         }
     }
 }
 
 void message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
 {
-    if(!is_json(message->payload))
-        return;
-
     int ret = insert_topic_to_database(message->topic, message->payload);
     if (ret)
         syslog(LOG_USER | LOG_ERR, "Topic data was not inserted to DB");
+
+    if (!is_json(message->payload)){
+        syslog(LOG_USER | LOG_WARNING, "Received message is not json");
+        return;
+    }
+
+    trigger_events(message->topic, message->payload);
+}
+
+void trigger_events(char topic[256], char dataInJson[256])
+{
+    for (int i = 0; i < amountOfEvents; i++){
+        if (!strcmp(events[i].topicName, topic)){
+            cJSON *root = cJSON_Parse(dataInJson);
+            if (root == NULL) {
+                syslog(LOG_USER | LOG_ERR, "Error parsing JSON.\n");
+                continue;
+            }
+
+            cJSON *jsonValue = NULL;
+            get_json_value(root, events[i].parameterName, &jsonValue);
+
+            if (jsonValue != NULL && value_meets_event_condition(jsonValue, events[i].valueType,
+            events[i].comparisonType, events[i].comparisonValue)){
+                send_email();
+            }
+
+            cJSON_Delete(root);
+        }
+    }
+}
+
+void mosquitto_deinit(Topic *topics, int amountOfTopics)
+{
+    if (mosq && connectedToTheBroker)
+        mosquitto_disconnect(mosq); 
+
+    if (mosq)
+        mosquitto_destroy(mosq);
+
+    mosquitto_lib_cleanup();
 }
