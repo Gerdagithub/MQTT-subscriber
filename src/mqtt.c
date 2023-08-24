@@ -1,4 +1,5 @@
 #include "mqtt.h"
+#include "additional.h"
 
 Event events[MAX_EVENTS];
 int amountOfEvents = 0;
@@ -6,7 +7,8 @@ struct mosquitto *mosq = NULL;
 bool connectedToTheBroker = false;
 int retMqtt = 0;
 
-extern struct Arguments argpArguments; 
+extern struct Arguments argpArguments;
+extern char emailPayloadText[];
 
 void on_connect_callback(struct mosquitto *mosq, void *userdata, int result) 
 {
@@ -105,7 +107,8 @@ void trigger_events(char topic[256], char dataInJson[256])
 
             if (jsonValue != NULL && value_meets_event_condition(jsonValue, events[i].valueType,
             events[i].comparisonType, events[i].comparisonValue)){
-                send_email();
+                change_email_payload(events[i].joinedRecipients, topic, dataInJson);
+                send_email(events[i].recipients, events[i].amountOfRecipients);
             }
 
             cJSON_Delete(root);

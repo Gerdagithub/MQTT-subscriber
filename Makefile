@@ -8,7 +8,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/mqtt-subscriber
-	DEPENDS:=+libmosquitto +libuci +libTuya +libsqlite3
+	DEPENDS:=+libmosquitto +libuci +libTuya +libsqlite3 +libcurl
 	SECTION:=utils
 	CATEGORY:=Utilities
 	TITLE:=MQTT subscriber

@@ -4,7 +4,7 @@ OBJS:=$(SRCS:.c=.o)
 CFLAGS:=-Wall
 CPPFLAGS:=-I$(CURDIR)
 
-LDLIBS:=-largp -luci -lmosquitto -lutils_modules -lsqlite3
+LDLIBS:=-largp -luci -lmosquitto -lutils_modules -lsqlite3 -lcurl
 
 .PHONY: all clean
 

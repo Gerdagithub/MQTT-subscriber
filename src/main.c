@@ -8,12 +8,14 @@
 #include "additional.h"
 #include "uci_mqtt.h"
 #include "sqlite_mqtt.h"
+#include "email.h"
 
 extern struct Arguments argpArguments; 
 extern struct mosquitto *mosq;
 extern sqlite3 *db;
 extern bool connectedToTheBroker;
 extern int retMqtt;
+extern CURL *curl;
 
 int main(int argc, char **argv)
 {
@@ -54,6 +56,9 @@ int main(int argc, char **argv)
         goto cleanUp;
 
     subscribe_to_topics(topics, amountOfTopics);
+    ret = email_sending_init();
+    if (ret)
+        goto cleanUp;
 
     ret = database_init(&dbOpened);
     if (ret)
@@ -64,6 +69,9 @@ int main(int argc, char **argv)
         syslog(LOG_USER | LOG_ERR, "mosquitto_loop_forever failed: %s", mosquitto_strerror(ret? ret : retMqtt));
 
 cleanUp:
+    if (curl != NULL)
+        curl_easy_cleanup(curl);
+    
     if (dbOpened)
         sqlite3_close(db); 
 

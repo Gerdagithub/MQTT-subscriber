@@ -11,7 +11,7 @@ int uci_init(struct uci_context **ctx, struct uci_package **pkg, bool *uciIsLoad
         return 1;
     }
 
-    if (uci_load(*ctx, "mqtt_subscriber.config", pkg) != UCI_OK) {
+    if (uci_load(*ctx, "mqtt_subscriber", pkg) != UCI_OK) {
         syslog(LOG_USER | LOG_ERR, "Failed to load UCI package");
         return 1;
     }
@@ -34,6 +34,7 @@ int load_topics_events(Topic *topics, int *amountOfTopics)
 
     get_topics(ctx, pkg, topics, amountOfTopics);
     get_events(ctx, pkg);
+    join_recipients();
  
  cleanUp:
     if (uciIsLoaded && uci_unload(ctx, pkg))
@@ -114,6 +115,9 @@ void process_event_info_from_uci(struct uci_section *section)
         if (!strcmp(option->e.name, "comparisonValue")){
             strncpy(events[amountOfEvents].comparisonValue, option->v.string, 
                     sizeof(events[amountOfEvents].comparisonValue));
+        }
+        if (!strcmp(option->e.name, "recipients")) {
+            get_recipients(option->v.string);
         }
     }
 
