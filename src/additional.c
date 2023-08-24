@@ -1,8 +1,12 @@
 #include "additional.h"
 #include "mqtt.h"
+#include "email.h"
 
 extern struct mosquitto *mosq;
 extern bool connectedToTheBroker;
+extern Event events[];
+extern int amountOfEvents;
+extern char emailPayloadText[];
 
 void signal_handler(int signal)
 {
@@ -140,7 +144,58 @@ bool compare_string(char value[256], int comparisonType, char comparisonValue[25
     return false;
 }
 
-int send_email()
+void join_recipients() 
 {
-    
+    for (int i = 0; i < amountOfEvents; i++) {
+        char *temp = (char *)malloc(strlen(events[i].recipients[0]) * 
+        events[i].amountOfRecipients + events[i].amountOfRecipients);
+
+        if (temp == NULL) {
+            syslog(LOG_USER | LOG_ERR, "Memory allocation failed");
+            continue;
+        }
+        
+        temp[0] = '\0';
+        for (int j = 0; j < events[i].amountOfRecipients; j++) {
+            strcat(temp, events[i].recipients[j]);
+            if (j < events[i].amountOfRecipients - 1) {
+                strcat(temp, ";");
+            }
+        }
+        
+        strncpy(events[i].joinedRecipients, temp, sizeof(events[i].joinedRecipients) - 1);
+        events[i].joinedRecipients[sizeof(events[i].joinedRecipients) - 1] = '\0'; // Ensure null-termination
+        
+        free(temp);
+    }
+}
+
+void change_email_payload(char recipients[300], char topic[256], char topicData[256])
+{
+    sprintf(emailPayloadText, 
+        "To: %s\r\n"
+        "From: %s\r\n"
+        "Subject: The event of the topic %s had met a condition\r\n"
+        "\r\nTopic's %s data: %s\r\n", 
+        recipients, FROM_MAIL_USERNAME, topic, topic, topicData);
+}
+
+void get_recipients(char *arrOfRecipients)
+{
+    char *recipient = strtok(arrOfRecipients, DELIMETER);
+
+    events[amountOfEvents].amountOfRecipients = 0;
+    while (recipient != NULL && events[amountOfEvents].amountOfRecipients < MAX_RECIPIENTS) {
+        if (strlen(recipient) > MAX_MAIL_LENGTH){
+            syslog(LOG_USER | LOG_WARNING, "Entered email address %s is too long", recipient);
+            recipient = strtok(NULL, DELIMETER);
+            continue;
+        }
+
+        strncpy(events[amountOfEvents].recipients[events[amountOfEvents].amountOfRecipients],
+        recipient, MAX_MAIL_LENGTH);
+
+        recipient = strtok(NULL, DELIMETER);
+        events[amountOfEvents].amountOfRecipients++;
+    }
 }

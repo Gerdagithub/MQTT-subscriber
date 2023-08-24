@@ -4,13 +4,18 @@
 #include <mosquitto.h>
 #include <syslog.h>
 #include <cJSON.h>
+#include <curl/curl.h>
 
 #include "argp_for_daemon.h"
 #include "sqlite_mqtt.h"
 
-#define MAX_RECIPIENTS 20
+#define MAX_RECIPIENTS 10
+#define MAX_MAIL_LENGTH 30
 #define MAX_TOPICS 50
 #define MAX_EVENTS 50
+
+// delimeter for recipients' emails in config file
+#define DELIMETER "," 
 
 #define LESS      1
 #define GREATER   2
@@ -30,6 +35,9 @@ typedef struct{
     char valueType[20];
     int comparisonType;
     char comparisonValue[256];
+    char recipients[MAX_RECIPIENTS][MAX_MAIL_LENGTH];
+    int amountOfRecipients;
+    char joinedRecipients[311];
 } Event;
 
 void on_connect_callback(struct mosquitto *mosq, void *userdata, int result);

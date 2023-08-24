@@ -17,6 +17,8 @@ bool value_meets_event_condition(cJSON *jsonValue, char valueType[20], int compa
                                  char comparisonValue[5]);
 bool compare_number(double number, int comparisonType, double comparisonValue);
 bool compare_string(char value[256], int comparisonType, char comparisonValue[256]);
-int send_email();
+void join_recipients();
+void change_email_payload(char recipients[300], char topic[256], char topicData[256]);
+void get_recipients(char *arrOfRecipients);
 
 #endif
